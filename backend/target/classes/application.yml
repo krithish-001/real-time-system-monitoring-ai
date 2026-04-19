@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: monitoring-backend
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    consumer:
+      group-id: "backend-group"
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:redis}
+      port: 6379
+
+influxdb:
+  url: ${INFLUXDB_URL:http://influxdb:8086}
+  token: ${INFLUX_TOKEN:my-super-secret-auth-token}
+  org: ${INFLUX_ORG:my-org}
+  bucket: ${INFLUX_BUCKET:system-metrics}
+
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:https://systemo.netlify.app}

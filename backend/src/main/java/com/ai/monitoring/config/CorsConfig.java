@@ -20,7 +20,7 @@ public class CorsConfig {
                 registry.addMapping("/api/**")
                         .allowedOrigins(allowedOrigins.split(",")) // Support multiple comma-separated domains
                         .allowedMethods("GET", "POST", "OPTIONS")
-                        .allowedHeaders("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Cache-Control")
+                        .allowedHeaders("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Cache-Control", "ngrok-skip-browser-warning")
                         .exposedHeaders("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")
                         .allowCredentials(true)
                         .maxAge(3600);

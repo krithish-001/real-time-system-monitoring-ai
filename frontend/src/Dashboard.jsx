@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 const Dashboard = () => {
     const [data, setData] = useState([]);
@@ -9,40 +10,55 @@ const Dashboard = () => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/api/stream`);
+        const abortController = new AbortController();
 
-        eventSource.onopen = () => setIsConnected(true);
-        eventSource.onerror = (err) => {
-            console.error("SSE error:", err);
-            setIsConnected(false);
-            eventSource.close();
-        };
-
-        eventSource.addEventListener('metric', (event) => {
-            const metric = JSON.parse(event.data);
-            const time = new Date(metric.timestamp).toLocaleTimeString();
-            
-            setData(prev => {
-                const newData = [...prev, {
-                    time,
-                    cpu: metric.cpu_usage_percent,
-                    ram: metric.ram_usage.percent,
-                    diskRead: metric.disk_io.read_bytes_sec,
-                    diskWrite: metric.disk_io.write_bytes_sec
-                }];
-                // Keep last 30 points on screen to look like a rolling window
-                if (newData.length > 30) newData.shift();
-                return newData;
-            });
-        });
-
-        eventSource.addEventListener('prediction', (event) => {
-            const pred = JSON.parse(event.data);
-            setLatestPred(pred);
+        fetchEventSource(`${import.meta.env.VITE_API_URL}/api/stream`, {
+            method: 'GET',
+            headers: {
+                'ngrok-skip-browser-warning': '69420',
+                'Accept': 'text/event-stream',
+            },
+            signal: abortController.signal,
+            async onopen(response) {
+                if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
+                    setIsConnected(true);
+                } else {
+                    console.error("Connection failed:", response.statusText);
+                }
+            },
+            onmessage(event) {
+                if (event.event === 'metric') {
+                    const metric = JSON.parse(event.data);
+                    const time = new Date(metric.timestamp).toLocaleTimeString();
+                    
+                    setData(prev => {
+                        const newData = [...prev, {
+                            time,
+                            cpu: metric.cpu_usage_percent,
+                            ram: metric.ram_usage.percent,
+                            diskRead: metric.disk_io.read_bytes_sec,
+                            diskWrite: metric.disk_io.write_bytes_sec
+                        }];
+                        if (newData.length > 30) newData.shift();
+                        return newData;
+                    });
+                } else if (event.event === 'prediction') {
+                    const pred = JSON.parse(event.data);
+                    setLatestPred(pred);
+                }
+            },
+            onclose() {
+                setIsConnected(false);
+            },
+            onerror(err) {
+                console.error("SSE error:", err);
+                setIsConnected(false);
+                // Do not throw to allow auto-reconnect, or throw to stop based on logic
+            }
         });
 
         return () => {
-            eventSource.close();
+            abortController.abort();
         };
     }, []);
 
