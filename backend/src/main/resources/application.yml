@@ -21,3 +21,7 @@ influxdb:
   token: ${INFLUX_TOKEN:my-super-secret-auth-token}
   org: ${INFLUX_ORG:my-org}
   bucket: ${INFLUX_BUCKET:system-metrics}
+
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:https://systemo.netlify.app}

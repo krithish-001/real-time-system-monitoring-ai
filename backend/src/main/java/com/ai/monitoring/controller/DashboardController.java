@@ -9,7 +9,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Allows React UI on different port to connect
 public class DashboardController {
 
     private final SseService sseService;
