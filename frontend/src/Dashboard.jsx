@@ -9,8 +9,9 @@ const Dashboard = () => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        // Connect to SSE Endpoint
-        const eventSource = new EventSource('http://localhost:8080/api/stream');
+        // Connect to SSE Endpoint using environment variable
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+        const eventSource = new EventSource(`${apiUrl}/api/stream`);
 
         eventSource.onopen = () => setIsConnected(true);
         eventSource.onerror = () => setIsConnected(false);
