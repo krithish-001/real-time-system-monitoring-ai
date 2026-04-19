@@ -9,12 +9,14 @@ const Dashboard = () => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        // Connect to SSE Endpoint using environment variable
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-        const eventSource = new EventSource(`${apiUrl}/api/stream`);
+        const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/api/stream`);
 
         eventSource.onopen = () => setIsConnected(true);
-        eventSource.onerror = () => setIsConnected(false);
+        eventSource.onerror = (err) => {
+            console.error("SSE error:", err);
+            setIsConnected(false);
+            eventSource.close();
+        };
 
         eventSource.addEventListener('metric', (event) => {
             const metric = JSON.parse(event.data);
